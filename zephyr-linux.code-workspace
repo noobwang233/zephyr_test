@@ -1,0 +1,87 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// Hush CMake
+		"cmake.configureOnOpen": false,
+
+		// IntelliSense
+		"C_Cpp.default.compilerPath": "${userHome}/zephyr-sdk-0.17.1/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
+		"C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+		"clangd.arguments": [
+			"--all-scopes-completion",
+			"--background-index",
+			"--clang-tidy",
+			"--clang-tidy-checks=performance-*, bugprone-*, misc-*, google-*, modernize-*, readability-*, portability-*",
+			"--compile-commands-dir=${workspaceFolder}/build/",
+			"--completion-parse=auto",
+			"--completion-style=detailed",
+			"--enable-config",
+			"--fallback-style=GNU",
+			"--function-arg-placeholders=true",
+			"--header-insertion-decorators",
+			"--header-insertion=iwyu",
+			"--log=verbose",
+			"--pch-storage=memory",
+			"--pretty",
+			"--ranking-model=decision_forest",
+			"-j=8"
+		],
+		"clangd.onConfigChanged": "restart",
+		"clangd.serverCompletionRanking": true,
+		"clangd.detectExtensionConflicts": true,
+		"editor.suggest.snippetsPreventQuickSuggestions": true,
+		"clangd.checkUpdates": true,
+		"clangd.enableCodeCompletion": true,
+		"clangd.inactiveRegions.useBackgroundHighlight": false,
+		// File Associations
+		"files.associations": {},
+		"files.autoSave": "onWindowChange",
+		"C_Cpp.intelliSenseEngine": "disabled",
+		"clangd.path": "/usr/bin/clangd",
+		"clangd.onConfigChanged.forceEnable": true
+	},
+
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "zephyr-qemu-cortex_m3",
+				"type": "cppdbg", // 需要安装 C/C++ 插件
+				"request": "launch",
+				"program": "${workspaceFolder}/build/zephyr/zephyr.elf",
+				"args": [],
+				"stopAtEntry": true,
+				"cwd": "${workspaceRoot}",
+				"externalConsole": true,
+				"miDebuggerServerAddress": "localhost:1234", // 指定 gdb server 端口，默认端口为 1234
+				"serverLaunchTimeout": 2000,
+				"targetArchitecture": "ARM",
+				"launchCompleteCommand": "exec-run",
+				"MIMode": "gdb",
+				"miDebuggerPath": "${userHome}/zephyr-sdk-0.17.1/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+				"setupCommands": [
+					{
+						"description": "Enable pretty-printing for gdb",
+						"text": "-enable-pretty-printing",
+						"ignoreFailures": true
+					}
+				]
+			}
+		]
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools",
+			"ms-python.python",
+			"ms-vscode.vscode-embedded-tools",
+			"ms-vscode.vscode-serial-monitor",
+			"marus25.cortex-debug",
+			"donjayamanne.python-environment-manager",
+			"llvm-vs-code-extensions.vscode-clangd"
+		]
+	}
+}
