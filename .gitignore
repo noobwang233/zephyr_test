@@ -1,0 +1,5 @@
+/build
+/.venv
+/.west
+/external
+/west-manifest
