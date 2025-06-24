@@ -9,7 +9,7 @@
 		"cmake.configureOnOpen": false,
 
 		// IntelliSense
-		"C_Cpp.default.compilerPath": "${userHome}/zephyr-sdk-0.17.1/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
+		"C_Cpp.default.compilerPath": "${userHome}/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
 		"C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
 		"clangd.arguments": [
 			"--all-scopes-completion",
@@ -62,7 +62,7 @@
 				"targetArchitecture": "ARM",
 				"launchCompleteCommand": "exec-run",
 				"MIMode": "gdb",
-				"miDebuggerPath": "${userHome}/zephyr-sdk-0.17.1/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+				"miDebuggerPath": "${userHome}/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
 				"setupCommands": [
 					{
 						"description": "Enable pretty-printing for gdb",
