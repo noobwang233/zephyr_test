@@ -1,5 +1,5 @@
 /build
 /.venv
 /.west
-/external
+/.cache
 /west-manifest
