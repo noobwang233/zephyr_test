@@ -70,6 +70,20 @@
 						"ignoreFailures": true
 					}
 				]
+			},
+			{
+				"name": "Cortex Debug",
+				"device": "gd32e503",
+				"cwd": "${workspaceFolder}",
+				"executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+				"request": "launch",
+				"type": "cortex-debug",
+				"runToEntryPoint": "main",
+				"servertype": "external",
+				"gdbTarget": "localhost:3333",
+				"gdbPath": "${userHome}/zephyr-sdk-0.17.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+				"svdFile": "${workspaceFolder}/external/zephyr/boards/gd/gd32e503z_eval/GD32E50x_HD.svd",
+				"showDevDebugOutput": "both"
 			}
 		]
 	},
