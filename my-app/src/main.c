@@ -2,97 +2,105 @@
  * @Author: tao wang
  * @Date: 2025-06-24 19:56:07
  * @LastEditors: tao wang
- * @LastEditTime: 2025-07-04 15:36:21
- * @Description: 模块描述
+ * @LastEditTime: 2025-07-04 16:13:17
+ * @Description: 
+ * 简化版 Zephyr 线程 API Demo，
+ * 不涉及中断、不使用定时器、不含线程通信，
+ * 仅保留线程的基本创建、命名、挂起、恢复、优先级调整、终止和遍历操作，非常适合用于理解 Zephyr 的线程基本用法。
  * @FilePath: /zephyrproject/my-app/src/main.c
  */
 
 #include <stdio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
 
-/* size of stack area used by each thread */
+/* 线程栈大小 */
 #define STACKSIZE 1024
 
-/* scheduling priority used by each thread */
-#define PRIORITY 7
+/* 线程优先级 */
+#define PRIORITY_WORKER 2
+#define PRIORITY_HELPER 2
 
+/* 定义线程栈, 必须在全局域定义 */
+K_THREAD_STACK_DEFINE(worker_stack, STACKSIZE);
+K_THREAD_STACK_DEFINE(helper_stack, STACKSIZE);
 
-void thread_task(uint32_t sleep_ms, uint32_t id)
+/* 线程控制块 */
+struct k_thread worker_thread_data;
+struct k_thread helper_thread_data;
+
+/* 线程函数 */
+void worker_thread(void *a, void *b, void *c)
 {
-    int cnt = 0;
     while (1) {
-        printf("thread %d running, cnt = %d\n", id, cnt);
-        k_msleep(sleep_ms);
-        cnt++;
+        printk("[Worker] Running...\n");
+        k_sleep(K_SECONDS(1));
     }
 }
 
-void thread1(void *p1, void *p2, void *p3)
+void helper_thread(void *a, void *b, void *c)
 {
-    thread_task(160, 1);
+    while (1) {
+        printk("[Helper] Assisting...\n");
+        k_sleep(K_SECONDS(2));
+    }
 }
 
-void thread2(void *p1, void *p2, void *p3)
+/* 遍历线程的回调函数 */
+void print_thread_info(const struct k_thread *thread, void *user_data)
 {
-    thread_task(1000, 2);
+    const char *name = k_thread_name_get((k_tid_t)thread);
+    if (!name)
+        name = "<unnamed>";
+
+    printk("Thread: %s | Priority: %d | State: 0x%x\n",
+           name,
+           k_thread_priority_get((k_tid_t)thread),
+           thread->base.thread_state);
 }
-
-/****************************************************************
- *           1. 使用 k_thread_create 创建线程                   *
- ****************************************************************/
-#if 0
-
-/* 定义线程栈, 必须在全局域定义 */
-K_THREAD_STACK_DEFINE(stack_area1, STACKSIZE);
-K_THREAD_STACK_DEFINE(stack_area2, STACKSIZE);
 
 int main(void)
 {
-    /* 定义线程结构体变量 */
-    struct k_thread thread_data1;
-    struct k_thread thread_data2;
-    /* 定义线程 id 变量 */
-    k_tid_t my_tid1;
-    k_tid_t my_tid2;
-
-    printf("Main thread start\n");
+    printk("=== Zephyr Thread API Demo (Simplified) ===\n");
 
     /* 创建线程 */
-    my_tid1 = k_thread_create(&thread_data1,                         /* 未初始化的线程结构体指针 */
-                              stack_area1,                           /* 堆栈空间的指针 */
-                              K_THREAD_STACK_SIZEOF(stack_area1),    /* 堆栈大小（以字节为单位） */
-                              thread1,                               /* 线程入口函数 */
-                              NULL, NULL, NULL,                      /* 传入给线程入口函数的3个参数 */
-                              PRIORITY,                              /* 线程优先级 */
-                              0,                                     /* 线程选项Flag */
-                              K_NO_WAIT);                            /* 启动的调度延迟，K_NO_WAIT（无延迟） */
+    k_tid_t tid_worker = k_thread_create(&worker_thread_data, worker_stack, STACKSIZE,
+        worker_thread, NULL, NULL, NULL,
+        PRIORITY_WORKER, 0, K_NO_WAIT);
+    k_thread_name_set(tid_worker, "worker");
 
-    my_tid2 = k_thread_create(&thread_data2,
-                              stack_area2,
-                              K_THREAD_STACK_SIZEOF(stack_area2),
-                              thread2,
-                              NULL, NULL, NULL,
-                              PRIORITY,
-                              0,
-                              K_NO_WAIT);
-    printf("Main thread end\n");
+    k_tid_t tid_helper = k_thread_create(&helper_thread_data, helper_stack, STACKSIZE,
+            helper_thread, NULL, NULL, NULL,
+            PRIORITY_HELPER, 0, K_NO_WAIT);
+    k_thread_name_set(tid_helper, "helper");
+
+    /* 运行一段时间 */
+    k_sleep(K_SECONDS(3));
+
+    /* 挂起 worker */
+    printk("Suspending worker thread...\n");
+    k_thread_suspend(tid_worker);
+    k_sleep(K_SECONDS(2));
+
+    /* 恢复 worker */
+    printk("Resuming worker thread...\n");
+    k_thread_resume(tid_worker);
+    k_sleep(K_SECONDS(2));
+
+    /* 提高 worker 优先级 */
+    printk("Raising worker thread priority...\n");
+    k_thread_priority_set(tid_worker, PRIORITY_WORKER - 1);
+    k_sleep(K_SECONDS(1));
+
+    /* 遍历所有线程 */
+    printk("\n== Current Threads ==\n");
+    k_thread_foreach(print_thread_info, NULL);
+
+    /* 停止 helper */
+    printk("Aborting helper thread...\n");
+    k_thread_abort(tid_helper);
+
+    printk("Demo complete.\n");
 
     return 0;
 }
-#endif
-
-/****************************************************************
- *           2. 使用 K_THREAD_DEFINE 创建线程                   *
- ****************************************************************/
-#if 1
-K_THREAD_DEFINE(thread1_id,         /* 线程id */
-                STACKSIZE,          /* 线程栈大小 */
-                thread1,            /* 线程入口函数 */
-                NULL, NULL, NULL,   /* 传入给线程入口函数的3个参数 */
-                PRIORITY,           /* 线程优先级 */
-                0,                  /* 线程选项Flag */
-                0);                 /* 调度延迟（以毫秒为单位），零表示无延迟 */
-K_THREAD_DEFINE(thread2_id, STACKSIZE, thread2, NULL, NULL, NULL,
-    PRIORITY, 0, 0);
-
-#endif
